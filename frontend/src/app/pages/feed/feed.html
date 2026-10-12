@@ -1,0 +1,29 @@
+<div class="column">
+  @if (!auth.user()) {
+    <div class="card welcome">
+      <p><strong>Welcome to WebSecGram!</strong></p>
+      <p class="muted"><a routerLink="/signup">Sign up</a> or <a routerLink="/login">log in</a> to share photos, like and comment.</p>
+    </div>
+  }
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+  @for (post of posts(); track post.id) {
+    <app-post-card [data]="post" />
+  } @empty {
+    @if (!loading() && !error()) {
+      <p class="muted center">
+        No posts yet.
+        @if (auth.user()) {
+          <a routerLink="/upload">Share the first photo</a>
+        }
+      </p>
+    }
+  }
+  @if (loading()) {
+    <p class="muted center">Loading...</p>
+  }
+  @if (hasNext() && !loading()) {
+    <button type="button" class="button secondary" (click)="load()">Load more</button>
+  }
+</div>

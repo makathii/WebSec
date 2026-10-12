@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: websec
       POSTGRES_USER: websec
-      POSTGRES_PASSWORD: websec_dev_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,7 +20,14 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/websec
       SPRING_DATASOURCE_USERNAME: websec
-      SPRING_DATASOURCE_PASSWORD: websec_dev_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PASSWORD_PEPPER: ${PASSWORD_PEPPER:?set PASSWORD_PEPPER in .env}
+      CORS_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,10 +37,13 @@ services:
   frontend:
     build:
       context: ./frontend
+    environment:
+      API_ORIGIN: ${API_ORIGIN:-http://localhost:8080}
     depends_on:
       - backend
     ports:
-      - "5173:5173"
+      - "5173:8080"
 
 volumes:
   postgres_data:
+  uploads:

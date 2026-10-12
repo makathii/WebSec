@@ -1,0 +1,27 @@
+<div class="column narrow">
+  <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>New post</h1>
+    <label class="file-picker">
+      {{ file() ? 'Choose another photo' : 'Choose a photo' }}
+      <span class="muted">JPEG or PNG, up to 5 MB and 4000×4000 pixels</span>
+      <input type="file" accept="image/jpeg,image/png" (change)="selectFile($event)" />
+    </label>
+    @if (preview(); as preview) {
+      <img [src]="preview" alt="Preview of the selected photo" class="preview" />
+    }
+    <label>
+      Caption
+      <textarea formControlName="caption" rows="3" maxlength="300" placeholder="Write a caption..."></textarea>
+    </label>
+    <p class="counter muted">{{ caption.value.length }}/300</p>
+    @if (caption.hasError('pattern')) {
+      <p class="error">The caption contains characters that are not allowed (for example &lt; or &gt;).</p>
+    }
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    <button type="submit" class="button" [disabled]="!file() || caption.invalid || sending()">
+      {{ sending() ? 'Sharing...' : 'Share' }}
+    </button>
+  </form>
+</div>

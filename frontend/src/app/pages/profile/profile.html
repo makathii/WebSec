@@ -1,0 +1,49 @@
+<div class="column wide">
+  @if (notFound()) {
+    <div class="center">
+      <h1>User not found</h1>
+      <a routerLink="/" class="button">Back to the feed</a>
+    </div>
+  }
+
+  @if (profile(); as profile) {
+    <header class="profile-header">
+      <div class="avatar">{{ profile.username.charAt(0) }}</div>
+      <div>
+        <h1>{{ profile.username }}</h1>
+        <p>
+          <strong>{{ profile.postCount }}</strong> {{ profile.postCount === 1 ? 'post' : 'posts' }}
+          <span class="muted"> · joined {{ profile.createdAt | date: 'longDate' }}</span>
+        </p>
+        @if (isMe()) {
+          <div class="profile-actions">
+            <a routerLink="/upload" class="button small">New post</a>
+            <a routerLink="/settings" class="button small secondary">Settings</a>
+          </div>
+        }
+      </div>
+    </header>
+
+    <div class="grid">
+      @for (post of posts(); track post.id) {
+        <a [routerLink]="['/p', post.id]" class="grid-item" [title]="post.caption ?? ''">
+          <img [src]="postService.imageSrc(post)" alt="Photo by {{ post.username }}" loading="lazy" />
+          <span class="grid-overlay">♥ {{ post.likeCount }} &nbsp; 💬 {{ post.commentCount }}</span>
+        </a>
+      }
+    </div>
+    @if (profile.postCount === 0) {
+      <p class="muted center">
+        @if (isMe()) {
+          You haven't posted anything yet. <a routerLink="/upload">Share your first photo</a>
+        } @else {
+          No posts yet.
+        }
+      </p>
+    }
+
+    @if (hasNext()) {
+      <button type="button" class="button secondary" (click)="loadPosts()">Load more</button>
+    }
+  }
+</div>

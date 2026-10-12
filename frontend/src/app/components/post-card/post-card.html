@@ -1,0 +1,40 @@
+<article class="card">
+  <header class="card-header">
+    <a [routerLink]="['/u', post().username]" class="username">{{ post().username }}</a>
+    <span class="muted" [title]="post().createdAt">{{ post().createdAt | timeAgo }}</span>
+  </header>
+
+  <a [routerLink]="['/p', post().id]">
+    <img [src]="posts.imageSrc(post())" alt="Photo by {{ post().username }}" class="card-image" loading="lazy" />
+  </a>
+
+  <div class="card-body">
+    <div class="actions">
+      <button
+        type="button"
+        class="like-button"
+        [class.liked]="post().likedByMe"
+        [disabled]="liking()"
+        [attr.aria-label]="post().likedByMe ? 'Unlike' : 'Like'"
+        (click)="toggleLike()"
+      >
+        {{ post().likedByMe ? '♥' : '♡' }}
+      </button>
+      <a [routerLink]="['/p', post().id]" class="comment-icon" aria-label="Comments">💬</a>
+    </div>
+    <p><strong>{{ post().likeCount }} {{ post().likeCount === 1 ? 'like' : 'likes' }}</strong></p>
+    @if (post().caption) {
+      <p>
+        <a [routerLink]="['/u', post().username]" class="username">{{ post().username }}</a>
+        {{ post().caption }}
+      </p>
+    }
+    <a [routerLink]="['/p', post().id]" class="muted">
+      @if (post().commentCount === 0) {
+        No comments yet
+      } @else {
+        View {{ post().commentCount === 1 ? '1 comment' : 'all ' + post().commentCount + ' comments' }}
+      }
+    </a>
+  </div>
+</article>

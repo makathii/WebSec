@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -8,6 +8,11 @@ RUN npm ci
 
 COPY . .
 
-EXPOSE 5173
+RUN npm run build
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+FROM nginxinc/nginx-unprivileged:stable-alpine
+
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
+
+EXPOSE 8080

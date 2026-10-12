@@ -1,0 +1,14 @@
+<nav class="navbar">
+  <a routerLink="/" class="logo">WebSecGram</a>
+  <div class="nav-links">
+    @if (auth.user(); as user) {
+      <a routerLink="/upload" routerLinkActive="active">New post</a>
+      <a [routerLink]="['/u', user.username]" routerLinkActive="active">{{ user.username }}</a>
+      <a routerLink="/settings" routerLinkActive="active">Settings</a>
+      <button type="button" class="link-button" (click)="logout()">Log out</button>
+    } @else {
+      <a routerLink="/login" routerLinkActive="active">Log in</a>
+      <a routerLink="/signup" class="button small">Sign up</a>
+    }
+  </div>
+</nav>

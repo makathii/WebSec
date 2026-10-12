@@ -1,0 +1,58 @@
+<div class="column">
+  @if (notFound()) {
+    <div class="center">
+      <h1>Post not found</h1>
+      <p class="muted">It may have been deleted.</p>
+      <a routerLink="/" class="button">Back to the feed</a>
+    </div>
+  }
+
+  @if (post(); as post) {
+    <app-post-card [data]="post" />
+
+    @if (isMine(post.username)) {
+      <button type="button" class="button danger" (click)="deletePost()">Delete post</button>
+    }
+
+    <section class="card comments">
+      <h2>Comments</h2>
+      @for (comment of comments(); track comment.id) {
+        <div class="comment">
+          <p>
+            <a [routerLink]="['/u', comment.username]" class="username">{{ comment.username }}</a>
+            {{ comment.text }}
+          </p>
+          <div class="comment-meta">
+            <span class="muted" [title]="comment.createdAt">{{ comment.createdAt | timeAgo }}</span>
+            @if (isMine(comment.username)) {
+              <button type="button" class="link-button" (click)="deleteComment(comment)">Delete</button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="muted">No comments yet. Be the first!</p>
+      }
+      @if (hasMoreComments()) {
+        <button type="button" class="link-button" (click)="loadComments()">Load more comments</button>
+      }
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+      @if (auth.user()) {
+        <form class="comment-form" [formGroup]="commentForm" (ngSubmit)="addComment()" novalidate>
+          <input type="text" formControlName="text" placeholder="Add a comment..." maxlength="500" aria-label="Comment" />
+          <button type="submit" class="button" [disabled]="commentText.invalid || sending()">Post</button>
+        </form>
+        @if (commentText.value.length > 400) {
+          <p class="counter muted">{{ commentText.value.length }}/500</p>
+        }
+        @if (commentText.hasError('pattern')) {
+          <p class="error">The comment contains characters that are not allowed (for example &lt; or &gt;).</p>
+        }
+      } @else {
+        <p class="muted"><a routerLink="/login" [queryParams]="{ returnUrl: '/p/' + post.id }">Log in</a> to like and comment.</p>
+      }
+    </section>
+  }
+</div>
