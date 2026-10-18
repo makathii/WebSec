@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
+import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -18,6 +19,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 @Service
 public class ImageStorageService {
@@ -27,6 +31,10 @@ public class ImageStorageService {
 	private static final String PATH_PREFIX = "uploads/";
 
 	private static final int MAX_SIZE = 4000;
+
+	private static final long MAX_DECODED_BYTES = 64L * 1024 * 1024;
+
+	private final Semaphore decodes = new Semaphore(4);
 
 	private final Path uploadDir;
 
@@ -42,6 +50,24 @@ public class ImageStorageService {
 	 * to find out the format, and we save a freshly encoded copy, so metadata (EXIF) is not kept.
 	 */
 	public String store(MultipartFile file) {
+		try {
+			if (!decodes.tryAcquire(5, TimeUnit.SECONDS)) {
+				throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Server is busy, try again");
+			}
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Server is busy, try again");
+		}
+		try {
+			return decodeAndSave(file);
+		}
+		finally {
+			decodes.release();
+		}
+	}
+
+	private String decodeAndSave(MultipartFile file) {
 		BufferedImage image;
 		String format;
 		try (ImageInputStream input = ImageIO.createImageInputStream(file.getInputStream())) {
@@ -59,6 +85,12 @@ public class ImageStorageService {
 				// check the size first, a small file can still be a huge image
 				if (reader.getWidth(0) > MAX_SIZE || reader.getHeight(0) > MAX_SIZE) {
 					throw new ApiException(HttpStatus.BAD_REQUEST, "Image must be at most 4000x4000 pixels");
+				}
+				ImageTypeSpecifier type = reader.getRawImageType(0);
+				int bitsPerPixel = type == null ? 32 : IntStream.of(type.getSampleModel().getSampleSize()).sum();
+				long bytes = (long) reader.getWidth(0) * reader.getHeight(0) * bitsPerPixel / 8;
+				if (bytes > MAX_DECODED_BYTES) {
+					throw new ApiException(HttpStatus.BAD_REQUEST, "Image is too large");
 				}
 				image = reader.read(0);
 			}
