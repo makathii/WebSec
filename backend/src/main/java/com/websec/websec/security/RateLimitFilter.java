@@ -42,7 +42,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
 	private boolean allowed(HttpServletRequest request) {
 		String method = request.getMethod();
-		String path = request.getRequestURI();
+		String path = request.getServletPath();
 		String ip = request.getRemoteAddr();
 
 		if (path.equals("/api/users/me/password") || path.equals("/api/users/me")) {
