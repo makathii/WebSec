@@ -10,6 +10,8 @@ import com.websec.websec.repository.PostRepository;
 import com.websec.websec.repository.RefreshTokenRepository;
 import com.websec.websec.repository.UserRepository;
 import com.websec.websec.validation.PasswordPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import java.util.List;
 
 @Service
 public class UserService {
+
+	private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
 	private final UserRepository userRepository;
 
@@ -69,10 +73,10 @@ public class UserService {
 	}
 
 	@Transactional
-	public void changePassword(long userId, ChangePasswordRequest request) {
+	public void changePassword(long userId, ChangePasswordRequest request, String ip) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
-		checkPassword(user, request.currentPassword());
+		checkPassword(user, request.currentPassword(), ip);
 		if (request.newPassword().equals(request.currentPassword())) {
 			throw new ApiException(HttpStatus.BAD_REQUEST, "The new password must be different");
 		}
@@ -81,32 +85,36 @@ public class UserService {
 		user.changePassword(passwordEncoder.encode(request.newPassword()));
 		// log out everywhere, someone else might know the old password
 		refreshTokenRepository.revokeAllForUser(user.getId());
+		log.warn("Password changed: user id {}, IP {}", user.getId(), ip);
 	}
 
 	@Transactional
-	public void deleteAccount(long userId, String password) {
+	public void deleteAccount(long userId, String password, String ip) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
-		checkPassword(user, password);
+		checkPassword(user, password, ip);
 
 		List<String> images = postRepository.findImagePathsByUserId(user.getId());
 		// posts, comments, likes and refresh tokens are removed by ON DELETE CASCADE
 		userRepository.delete(user);
 		userRepository.flush();
 		images.forEach(imageStorage::delete);
+		log.warn("Account deleted: user id {}, IP {}", userId, ip);
 	}
 
-	private void checkPassword(User user, String password) {
+	private void checkPassword(User user, String password, String ip) {
 		String failKey = "user:" + user.getId();
-		if (rateLimitService.tooManyFailedLogins(failKey)) {
+		if (rateLimitService.tooManyFailedLogins(failKey, ip)) {
+			log.warn("Password check blocked after too many failed attempts: user id {}, IP {}", user.getId(), ip);
 			throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many wrong passwords, try again later");
 		}
 		if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-			rateLimitService.recordFailedLogin(failKey);
+			rateLimitService.recordFailedLogin(failKey, ip);
+			log.warn("Wrong password on password check: user id {}, IP {}", user.getId(), ip);
 			// 403 and not 401, because the access token itself is fine
 			throw new ApiException(HttpStatus.FORBIDDEN, "Wrong password");
 		}
-		rateLimitService.resetFailedLogins(failKey);
+		rateLimitService.resetFailedLogins(failKey, ip);
 	}
 
 	private void requireGoodPassword(String password, String username, String email) {

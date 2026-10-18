@@ -7,6 +7,8 @@ import com.websec.websec.model.User;
 import com.websec.websec.repository.RefreshTokenRepository;
 import com.websec.websec.repository.UserRepository;
 import com.websec.websec.validation.Patterns;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +23,8 @@ import java.util.Optional;
 public class SessionService {
 
 	public static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(7);
+
+	private static final Logger log = LoggerFactory.getLogger(SessionService.class);
 
 	public record Session(User user, String accessToken, String refreshToken) {
 	}
@@ -48,13 +52,15 @@ public class SessionService {
 	}
 
 	@Transactional
-	public Session login(LoginRequest request) {
+	public Session login(LoginRequest request, String ip) {
 		Optional<User> user = request.isEmail()
 				? userRepository.findByEmail(request.login())
 				: userRepository.findByUsername(request.login());
+		Long userId = user.map(User::getId).orElse(null);
 
 		String failKey = user.map(u -> "user:" + u.getId()).orElse("login:" + request.login());
-		if (rateLimitService.tooManyFailedLogins(failKey)) {
+		if (rateLimitService.tooManyFailedLogins(failKey, ip)) {
+			log.warn("Login blocked after too many failed attempts: user id {}, IP {}", userId, ip);
 			throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many failed logins, try again later");
 		}
 
@@ -62,11 +68,12 @@ public class SessionService {
 		String hash = user.map(User::getPasswordHash).orElse(dummyHash);
 		boolean passwordOk = passwordEncoder.matches(request.password(), hash);
 		if (user.isEmpty() || !passwordOk) {
-			rateLimitService.recordFailedLogin(failKey);
+			rateLimitService.recordFailedLogin(failKey, ip);
+			log.warn("Failed login: user id {}, IP {}", userId, ip);
 			throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid login or password");
 		}
 
-		rateLimitService.resetFailedLogins(failKey);
+		rateLimitService.resetFailedLogins(failKey, ip);
 		return startSession(user.get());
 	}
 
@@ -79,6 +86,7 @@ public class SessionService {
 		if (token.isRevoked()) {
 			// a token that was already used shows up again, so it was probably stolen
 			refreshTokenRepository.revokeAllForUser(token.getUser().getId());
+			log.warn("Reused refresh token, all sessions revoked: user id {}", token.getUser().getId());
 			throw new ApiException(HttpStatus.UNAUTHORIZED, "Session expired");
 		}
 		if (token.isExpired()) {

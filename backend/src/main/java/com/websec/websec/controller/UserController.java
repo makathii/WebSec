@@ -12,6 +12,7 @@ import com.websec.websec.security.RefreshCookie;
 import com.websec.websec.service.PostService;
 import com.websec.websec.service.UserService;
 import com.websec.websec.validation.Patterns;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -68,15 +69,15 @@ public class UserController {
 	// "me" can't clash with a real user, usernames have at least 3 characters
 	@PutMapping("/me/password")
 	public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request,
-			@AuthenticationPrincipal Jwt jwt) {
-		userService.changePassword(CurrentUser.id(jwt), request);
+			@AuthenticationPrincipal Jwt jwt, HttpServletRequest http) {
+		userService.changePassword(CurrentUser.id(jwt), request, http.getRemoteAddr());
 		return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, refreshCookie.clear()).build();
 	}
 
 	@DeleteMapping("/me")
 	public ResponseEntity<Void> deleteAccount(@Valid @RequestBody DeleteAccountRequest request,
-			@AuthenticationPrincipal Jwt jwt) {
-		userService.deleteAccount(CurrentUser.id(jwt), request.password());
+			@AuthenticationPrincipal Jwt jwt, HttpServletRequest http) {
+		userService.deleteAccount(CurrentUser.id(jwt), request.password(), http.getRemoteAddr());
 		return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, refreshCookie.clear()).build();
 	}
 }

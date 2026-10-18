@@ -14,24 +14,34 @@ public class RateLimitService {
 	private record Window(long start, long length, int count) {
 	}
 
-	private static final int MAX_FAILED_LOGINS = 10;
+	private static final int MAX_FAILED_LOGINS_PER_IP = 10;
+
+	private static final int MAX_FAILED_LOGINS_PER_ACCOUNT = 100;
 
 	private static final Duration FAILED_LOGIN_WINDOW = Duration.ofMinutes(15);
 
 	private final Map<String, Window> windows = new ConcurrentHashMap<>();
 
-	// Failed password checks are counted per account (login, change password, delete account),
-	// so a password can't be brute forced from many IPs.
-	public boolean tooManyFailedLogins(String key) {
-		return isOverLimit("failed-login:" + key, MAX_FAILED_LOGINS);
+	public boolean tooManyFailedLogins(String account, String ip) {
+		return isOverLimit(pairKey(account, ip), MAX_FAILED_LOGINS_PER_IP)
+				|| isOverLimit(accountKey(account), MAX_FAILED_LOGINS_PER_ACCOUNT);
 	}
 
-	public void recordFailedLogin(String key) {
-		tryAcquire("failed-login:" + key, Integer.MAX_VALUE, FAILED_LOGIN_WINDOW);
+	public void recordFailedLogin(String account, String ip) {
+		tryAcquire(pairKey(account, ip), Integer.MAX_VALUE, FAILED_LOGIN_WINDOW);
+		tryAcquire(accountKey(account), Integer.MAX_VALUE, FAILED_LOGIN_WINDOW);
 	}
 
-	public void resetFailedLogins(String key) {
-		reset("failed-login:" + key);
+	public void resetFailedLogins(String account, String ip) {
+		reset(pairKey(account, ip));
+	}
+
+	private static String pairKey(String account, String ip) {
+		return "failed-login:" + account + "|ip:" + ip;
+	}
+
+	private static String accountKey(String account) {
+		return "failed-login:" + account;
 	}
 
 	public boolean tryAcquire(String key, int limit, Duration window) {

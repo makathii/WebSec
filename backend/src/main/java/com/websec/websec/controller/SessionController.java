@@ -8,6 +8,7 @@ import com.websec.websec.exception.ApiException;
 import com.websec.websec.security.RefreshCookie;
 import com.websec.websec.service.SessionService;
 import com.websec.websec.service.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -38,9 +39,9 @@ public class SessionController {
 
 	@PostMapping
 	public ResponseEntity<SessionResponse> login(@Valid @RequestBody LoginRequest request,
-			@RequestHeader(name = HttpHeaders.ORIGIN, required = false) String origin) {
+			@RequestHeader(name = HttpHeaders.ORIGIN, required = false) String origin, HttpServletRequest http) {
 		checkOrigin(origin);
-		return created(sessionService.login(request));
+		return created(sessionService.login(request, http.getRemoteAddr()));
 	}
 
 	@PostMapping("/tokens")
