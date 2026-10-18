@@ -72,7 +72,8 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleOther(Exception e) {
-		log.error("Unhandled error", e);
+		StackTraceElement[] trace = e.getStackTrace();
+		log.error("Unhandled error: {} at {}", e.getClass().getName(), trace.length > 0 ? trace[0] : "unknown");
 		return error(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
 	}
 
