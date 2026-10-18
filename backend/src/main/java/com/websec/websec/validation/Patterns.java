@@ -10,11 +10,11 @@ public final class Patterns {
 
 	public static final String LOGIN = "(" + USERNAME + ")|(" + EMAIL + ")";
 
-	// printable ASCII only, the other rules are in PasswordPolicy
-	public static final String PASSWORD = "^[\\x20-\\x7E]{12,128}$";
+	// any characters except control characters, the other rules are in PasswordPolicy
+	public static final String PASSWORD = "^[^\\p{Cc}\\p{Cn}\\p{Cs}]{12,128}$";
 
 	// for logging in we only check the charset and length, the policy applies when a password is set
-	public static final String ANY_PASSWORD = "^[\\x20-\\x7E]{1,128}$";
+	public static final String ANY_PASSWORD = "^[^\\p{Cc}\\p{Cn}\\p{Cs}]{1,128}$";
 
 	// letters, marks, digits, punctuation, spaces, symbols like emoji/currency, + and =, and the
 	// zero width joiner for emoji sequences. No control chars, no < >, no bidi overrides.
@@ -26,6 +26,10 @@ public final class Patterns {
 	public static final String REFRESH_TOKEN = "^[A-Za-z0-9_-]{43}$";
 
 	private Patterns() {
+	}
+
+	public static String normalizePassword(String password) {
+		return password == null ? null : Normalizer.normalize(password, Normalizer.Form.NFKC);
 	}
 
 	public static String normalizeText(String text) {

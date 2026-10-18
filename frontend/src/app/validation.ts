@@ -15,18 +15,16 @@ export interface PasswordRule {
 
 export function passwordRules(password: string, username = '', email = ''): PasswordRule[] {
   const lower = password.toLowerCase();
-  const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter((r) => r.test(password)).length;
+  const length = [...password].length;
   const localPart = email.toLowerCase().split('@')[0];
   const containsName =
     (username.length >= 3 && lower.includes(username.toLowerCase())) ||
     (localPart.length >= 3 && lower.includes(localPart));
 
   return [
-    { text: '12 to 128 characters', ok: password.length >= 12 && password.length <= 128 },
-    { text: 'At least 3 of: lowercase, uppercase, digit, symbol', ok: classes >= 3 },
-    { text: 'No character more than 3 times in a row', ok: !/(.)\1{3}/.test(password) },
+    { text: '12 to 128 characters', ok: length >= 12 && length <= 128 },
     { text: 'Does not contain your username or email', ok: !containsName },
-    { text: 'Only letters, digits, spaces and standard symbols', ok: /^[\x20-\x7E]*$/.test(password) },
+    { text: 'No control characters', ok: /^[^\p{Cc}\p{Cn}\p{Cs}]*$/u.test(password) },
   ];
 }
 
@@ -35,10 +33,10 @@ export function passwordStrength(password: string, username = '', email = ''): n
   if (!passwordRules(password, username, email).every((rule) => rule.ok)) {
     return password.length > 0 ? 1 : 0;
   }
-  const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter((r) => r.test(password)).length;
+  const length = [...password].length;
   let score = 2;
-  if (password.length >= 16) score++;
-  if (classes === 4 || password.length >= 20) score++;
+  if (length >= 16) score++;
+  if (length >= 20) score++;
   return Math.min(score, 4);
 }
 

@@ -13,6 +13,7 @@ public record LoginRequest(
 
 	public LoginRequest {
 		login = login == null ? null : login.strip().toLowerCase(Locale.ROOT);
+		password = Patterns.normalizePassword(password);
 	}
 
 	public boolean isEmail() {

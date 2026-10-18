@@ -7,4 +7,9 @@ import jakarta.validation.constraints.Pattern;
 public record ChangePasswordRequest(
 		@NotNull @Pattern(regexp = Patterns.ANY_PASSWORD) String currentPassword,
 		@NotNull @Pattern(regexp = Patterns.ANY_PASSWORD) String newPassword) {
+
+	public ChangePasswordRequest {
+		currentPassword = Patterns.normalizePassword(currentPassword);
+		newPassword = Patterns.normalizePassword(newPassword);
+	}
 }

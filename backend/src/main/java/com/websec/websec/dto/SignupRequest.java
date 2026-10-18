@@ -15,5 +15,6 @@ public record SignupRequest(
 	public SignupRequest {
 		email = email == null ? null : email.strip().toLowerCase(Locale.ROOT);
 		username = username == null ? null : username.strip().toLowerCase(Locale.ROOT);
+		password = Patterns.normalizePassword(password);
 	}
 }
