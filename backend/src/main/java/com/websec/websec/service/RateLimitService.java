@@ -16,7 +16,11 @@ public class RateLimitService {
 
 	private static final int MAX_FAILED_LOGINS_PER_IP = 10;
 
-	private static final int MAX_FAILED_LOGINS_PER_ACCOUNT = 100;
+	private static final int MAX_FAILED_LOGINS_PER_ACCOUNT = 1000;
+
+	private static final int CAPTCHA_AFTER_FAILED_LOGINS_PER_IP = 3;
+
+	private static final int CAPTCHA_AFTER_FAILED_LOGINS_PER_ACCOUNT = 5;
 
 	private static final Duration FAILED_LOGIN_WINDOW = Duration.ofMinutes(15);
 
@@ -25,6 +29,11 @@ public class RateLimitService {
 	public boolean tooManyFailedLogins(String account, String ip) {
 		return isOverLimit(pairKey(account, ip), MAX_FAILED_LOGINS_PER_IP)
 				|| isOverLimit(accountKey(account), MAX_FAILED_LOGINS_PER_ACCOUNT);
+	}
+
+	public boolean captchaRequired(String account, String ip) {
+		return isOverLimit(pairKey(account, ip), CAPTCHA_AFTER_FAILED_LOGINS_PER_IP)
+				|| isOverLimit(accountKey(account), CAPTCHA_AFTER_FAILED_LOGINS_PER_ACCOUNT);
 	}
 
 	public void recordFailedLogin(String account, String ip) {

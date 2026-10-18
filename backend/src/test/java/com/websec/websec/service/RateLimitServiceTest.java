@@ -26,11 +26,46 @@ class RateLimitServiceTest {
 	@Test
 	void manyIpsTogetherBlockTheAccount() {
 		for (int ip = 0; ip < 100; ip++) {
-			fail("user:1", "10.0.1." + ip, 1);
+			fail("user:1", "10.0.1." + ip, 10);
 		}
 
 		assertThat(service.tooManyFailedLogins("user:1", "10.0.2.1")).isTrue();
 		assertThat(service.tooManyFailedLogins("user:2", "10.0.2.1")).isFalse();
+	}
+
+	@Test
+	void hundredFailuresFromManyIpsDoNotLockOutTheOwner() {
+		for (int ip = 0; ip < 100; ip++) {
+			fail("user:1", "10.0.1." + ip, 1);
+		}
+
+		assertThat(service.tooManyFailedLogins("user:1", "10.0.2.1")).isFalse();
+		assertThat(service.captchaRequired("user:1", "10.0.2.1")).isTrue();
+	}
+
+	@Test
+	void captchaAfterThreeFailuresFromOneIp() {
+		fail("user:1", "10.0.0.66", 2);
+		assertThat(service.captchaRequired("user:1", "10.0.0.66")).isFalse();
+
+		fail("user:1", "10.0.0.66", 1);
+		assertThat(service.captchaRequired("user:1", "10.0.0.66")).isTrue();
+		assertThat(service.captchaRequired("user:1", "10.0.0.1")).isFalse();
+	}
+
+	@Test
+	void captchaForEveryoneAfterFiveFailuresOnTheAccount() {
+		for (int ip = 0; ip < 4; ip++) {
+			fail("user:1", "10.0.1." + ip, 1);
+		}
+		assertThat(service.captchaRequired("user:1", "10.0.0.1")).isFalse();
+
+		for (int ip = 4; ip < 5; ip++) {
+			fail("user:1", "10.0.1." + ip, 1);
+		}
+
+		assertThat(service.captchaRequired("user:1", "10.0.0.1")).isTrue();
+		assertThat(service.captchaRequired("user:2", "10.0.0.1")).isFalse();
 	}
 
 	@Test

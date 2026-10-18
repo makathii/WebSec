@@ -39,15 +39,19 @@ public class SessionService {
 
 	private final RateLimitService rateLimitService;
 
+	private final CaptchaService captchaService;
+
 	private final String dummyHash;
 
 	public SessionService(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository,
-			TokenService tokenService, PasswordEncoder passwordEncoder, RateLimitService rateLimitService) {
+			TokenService tokenService, PasswordEncoder passwordEncoder, RateLimitService rateLimitService,
+			CaptchaService captchaService) {
 		this.userRepository = userRepository;
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.tokenService = tokenService;
 		this.passwordEncoder = passwordEncoder;
 		this.rateLimitService = rateLimitService;
+		this.captchaService = captchaService;
 		this.dummyHash = passwordEncoder.encode("not-a-real-password");
 	}
 
@@ -62,6 +66,10 @@ public class SessionService {
 		if (rateLimitService.tooManyFailedLogins(failKey, ip)) {
 			log.warn("Login blocked after too many failed attempts: user id {}, IP {}", userId, ip);
 			throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many failed logins, try again later");
+		}
+		if (rateLimitService.captchaRequired(failKey, ip) && !captchaService.verify(request.captcha())) {
+			log.warn("Login without valid captcha: user id {}, IP {}", userId, ip);
+			throw new ApiException(HttpStatus.PRECONDITION_REQUIRED, "Captcha required");
 		}
 
 		// always run BCrypt, even for unknown users, so the response time doesn't reveal if a user exists

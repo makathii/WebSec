@@ -1,11 +1,13 @@
 package com.websec.websec.controller;
 
 import com.websec.websec.config.AppProperties;
+import com.websec.websec.dto.CaptchaChallenge;
 import com.websec.websec.dto.LoginRequest;
 import com.websec.websec.dto.SessionResponse;
 import com.websec.websec.dto.UserResponse;
 import com.websec.websec.exception.ApiException;
 import com.websec.websec.security.RefreshCookie;
+import com.websec.websec.service.CaptchaService;
 import com.websec.websec.service.SessionService;
 import com.websec.websec.service.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -31,10 +34,14 @@ public class SessionController {
 
 	private final RefreshCookie refreshCookie;
 
-	public SessionController(SessionService sessionService, AppProperties properties, RefreshCookie refreshCookie) {
+	private final CaptchaService captchaService;
+
+	public SessionController(SessionService sessionService, AppProperties properties, RefreshCookie refreshCookie,
+			CaptchaService captchaService) {
 		this.sessionService = sessionService;
 		this.properties = properties;
 		this.refreshCookie = refreshCookie;
+		this.captchaService = captchaService;
 	}
 
 	@PostMapping
@@ -42,6 +49,11 @@ public class SessionController {
 			@RequestHeader(name = HttpHeaders.ORIGIN, required = false) String origin, HttpServletRequest http) {
 		checkOrigin(origin);
 		return created(sessionService.login(request, http.getRemoteAddr()));
+	}
+
+	@GetMapping("/challenge")
+	public CaptchaChallenge challenge() {
+		return captchaService.createChallenge();
 	}
 
 	@PostMapping("/tokens")

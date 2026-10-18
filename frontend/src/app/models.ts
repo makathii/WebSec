@@ -15,6 +15,21 @@ export interface Session {
   user: User;
 }
 
+export interface CaptchaChallenge {
+  algorithm: string;
+  challenge: string;
+  maxNumber: number;
+  salt: string;
+  signature: string;
+}
+
+export interface CaptchaSolution {
+  challenge: string;
+  salt: string;
+  number: number;
+  signature: string;
+}
+
 export interface Post {
   id: number;
   username: string;

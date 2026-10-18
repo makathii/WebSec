@@ -55,6 +55,7 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.GET, "/api/users/*", "/api/users/*/posts").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*", "/api/posts/*/comments").permitAll()
 				.requestMatchers(HttpMethod.GET, "/uploads/*").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/session/challenge").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/session", "/api/session/tokens").permitAll()
 				.requestMatchers(HttpMethod.DELETE, "/api/session").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/posts", "/api/posts/*/comments").authenticated()
