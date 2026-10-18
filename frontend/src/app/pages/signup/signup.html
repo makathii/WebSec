@@ -22,7 +22,7 @@
     <label>
       Password
       <div class="password-input">
-        <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" maxlength="128" />
+        <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" maxlength="256" />
         <button type="button" class="link-button" (click)="showPassword.set(!showPassword())">
           {{ showPassword() ? 'Hide' : 'Show' }}
         </button>
@@ -38,7 +38,7 @@
 
     <label>
       Confirm password
-      <input [type]="showPassword() ? 'text' : 'password'" formControlName="confirm" autocomplete="new-password" maxlength="128" />
+      <input [type]="showPassword() ? 'text' : 'password'" formControlName="confirm" autocomplete="new-password" maxlength="256" />
     </label>
     @if (form.controls.confirm.touched && form.hasError('mismatch')) {
       <p class="error">The passwords don't match.</p>

@@ -26,7 +26,7 @@ class RateLimitServiceTest {
 	@Test
 	void manyIpsTogetherBlockTheAccount() {
 		for (int ip = 0; ip < 100; ip++) {
-			fail("user:1", "10.0.1." + ip, 10);
+			fail("user:1", "10.0.1." + ip, 1);
 		}
 
 		assertThat(service.tooManyFailedLogins("user:1", "10.0.2.1")).isTrue();
@@ -34,8 +34,8 @@ class RateLimitServiceTest {
 	}
 
 	@Test
-	void hundredFailuresFromManyIpsDoNotLockOutTheOwner() {
-		for (int ip = 0; ip < 100; ip++) {
+	void ninetyNineFailuresFromManyIpsDoNotLockOutTheOwner() {
+		for (int ip = 0; ip < 99; ip++) {
 			fail("user:1", "10.0.1." + ip, 1);
 		}
 

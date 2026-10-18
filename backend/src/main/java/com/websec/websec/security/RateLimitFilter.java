@@ -56,7 +56,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 		}
 
 		if (path.equals("/api/session")) {
-			return rateLimitService.tryAcquire("login:" + ip, 5, MINUTE);
+			return rateLimitService.tryAcquire("login:" + ip, 10, MINUTE);
 		}
 		if (path.equals("/api/users")) {
 			return rateLimitService.tryAcquire("signup:" + ip, 3, MINUTE);

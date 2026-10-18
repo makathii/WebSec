@@ -11,7 +11,7 @@
     <label>
       Password
       <div class="password-input">
-        <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" maxlength="128" />
+        <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" maxlength="256" />
         <button type="button" class="link-button" (click)="showPassword.set(!showPassword())">
           {{ showPassword() ? 'Hide' : 'Show' }}
         </button>

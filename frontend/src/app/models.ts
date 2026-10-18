@@ -16,7 +16,6 @@ export interface Session {
 }
 
 export interface CaptchaChallenge {
-  algorithm: string;
   challenge: string;
   maxNumber: number;
   salt: string;

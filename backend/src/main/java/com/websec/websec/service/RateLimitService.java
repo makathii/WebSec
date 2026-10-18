@@ -16,7 +16,7 @@ public class RateLimitService {
 
 	private static final int MAX_FAILED_LOGINS_PER_IP = 10;
 
-	private static final int MAX_FAILED_LOGINS_PER_ACCOUNT = 1000;
+	private static final int MAX_FAILED_LOGINS_PER_ACCOUNT = 100;
 
 	private static final int CAPTCHA_AFTER_FAILED_LOGINS_PER_IP = 3;
 

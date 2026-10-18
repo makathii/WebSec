@@ -4,12 +4,12 @@
     <p class="muted">You will be logged out on all devices.</p>
     <label>
       Current password
-      <input type="password" formControlName="current" autocomplete="current-password" maxlength="128" />
+      <input type="password" formControlName="current" autocomplete="current-password" maxlength="256" />
     </label>
     <label>
       New password
       <div class="password-input">
-        <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" maxlength="128" />
+        <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" maxlength="256" />
         <button type="button" class="link-button" (click)="showPassword.set(!showPassword())">
           {{ showPassword() ? 'Hide' : 'Show' }}
         </button>
@@ -20,7 +20,7 @@
     }
     <label>
       Confirm new password
-      <input [type]="showPassword() ? 'text' : 'password'" formControlName="confirm" autocomplete="new-password" maxlength="128" />
+      <input [type]="showPassword() ? 'text' : 'password'" formControlName="confirm" autocomplete="new-password" maxlength="256" />
     </label>
     @if (passwordForm.controls.confirm.touched && passwordForm.hasError('mismatch')) {
       <p class="error">The passwords don't match.</p>
@@ -36,7 +36,7 @@
     <p class="muted">This deletes your account, all your posts, comments and likes. It can't be undone.</p>
     <label>
       Password
-      <input type="password" formControlName="password" autocomplete="current-password" maxlength="128" />
+      <input type="password" formControlName="password" autocomplete="current-password" maxlength="256" />
     </label>
     <label>
       Type your username ({{ auth.user()?.username }}) to confirm

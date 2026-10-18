@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class CaptchaService {
 
-	public static final int MAX_NUMBER = 50_000;
+	public static final int MAX_NUMBER = 150_000;
 
 	private static final Duration TTL = Duration.ofMinutes(5);
 
@@ -42,7 +42,7 @@ public class CaptchaService {
 		random.nextBytes(saltBytes);
 		String salt = HexFormat.of().formatHex(saltBytes) + "." + Instant.now().plus(TTL).getEpochSecond();
 		String challenge = sha256(salt + random.nextInt(MAX_NUMBER + 1));
-		return new CaptchaChallenge("SHA-256", challenge, MAX_NUMBER, salt, hmac(challenge));
+		return new CaptchaChallenge(challenge, MAX_NUMBER, salt, hmac(challenge));
 	}
 
 	public boolean verify(CaptchaSolution solution) {

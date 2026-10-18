@@ -10,7 +10,7 @@ import java.util.Locale;
 public record SignupRequest(
 		@NotNull @Size(max = 254) @Pattern(regexp = Patterns.EMAIL) String email,
 		@NotNull @Pattern(regexp = Patterns.USERNAME) String username,
-		@NotNull @Size(max = 128) String password) {
+		@NotNull @Pattern(regexp = Patterns.ANY_PASSWORD) String password) {
 
 	public SignupRequest {
 		email = email == null ? null : email.strip().toLowerCase(Locale.ROOT);

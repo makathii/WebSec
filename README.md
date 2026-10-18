@@ -1,7 +1,6 @@
 # WebSecGram
 
 A small Instagram clone for the web security course. Spring Boot backend, Angular frontend, PostgreSQL.
-See `PLAN.md` for the design and the security measures.
 
 ## Run
 
@@ -18,6 +17,8 @@ If the app is accessed through another host than `localhost`, set `FRONTEND_ORIG
 (and `COOKIE_SECURE=false` when that host is plain http).
 
 ## Development
+
+Requires Node.js 20.19+ or 22.12+ (Angular 21).
 
 ```bash
 cd frontend && npm install && npm start   # http://localhost:4200, set FRONTEND_ORIGIN accordingly

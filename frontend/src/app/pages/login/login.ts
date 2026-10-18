@@ -33,7 +33,7 @@ export class Login {
 
   protected form = new FormGroup({
     login: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(254)] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(128)] }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(256)] }),
   });
 
   submit() {
