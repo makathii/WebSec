@@ -28,7 +28,7 @@ public class ImageController {
 		MediaType type = filename.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
 		return ResponseEntity.ok()
 			.contentType(type)
-			.cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePublic())
+			.cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePrivate())
 			.body(file);
 	}
 }
