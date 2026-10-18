@@ -29,6 +29,9 @@ public class User {
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
+	@Column(name = "token_version", nullable = false)
+	private int tokenVersion;
+
 	protected User() {
 	}
 
@@ -41,6 +44,7 @@ public class User {
 
 	public void changePassword(String passwordHash) {
 		this.passwordHash = passwordHash;
+		this.tokenVersion++;
 	}
 
 	public Long getId() {
@@ -61,5 +65,9 @@ public class User {
 
 	public Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	public int getTokenVersion() {
+		return tokenVersion;
 	}
 }

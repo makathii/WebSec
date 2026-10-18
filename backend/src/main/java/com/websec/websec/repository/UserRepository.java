@@ -2,6 +2,8 @@ package com.websec.websec.repository;
 
 import com.websec.websec.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -14,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	boolean existsByUsername(String username);
 
 	boolean existsByEmail(String email);
+
+	@Query("select u.tokenVersion from User u where u.id = :id")
+	Optional<Integer> findTokenVersionById(@Param("id") Long id);
 }

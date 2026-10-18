@@ -36,6 +36,7 @@ public class TokenService {
 		JwtClaimsSet claims = JwtClaimsSet.builder()
 			.issuer(SecurityConfig.JWT_ISSUER)
 			.subject(user.getId().toString())
+			.claim(SecurityConfig.TOKEN_VERSION_CLAIM, user.getTokenVersion())
 			.issuedAt(now)
 			.expiresAt(now.plus(ACCESS_TOKEN_TTL))
 			.build();
