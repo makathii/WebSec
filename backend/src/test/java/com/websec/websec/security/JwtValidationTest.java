@@ -34,7 +34,7 @@ class JwtValidationTest {
 	@BeforeEach
 	void setUp() {
 		String key = Base64.getEncoder().encodeToString(KEY);
-		AppProperties properties = new AppProperties(key, key, "http://localhost:5173", true, "uploads");
+		AppProperties properties = new AppProperties(key, key, "http://localhost:5173", true, "uploads", "site", "secret");
 		SecurityConfig config = new SecurityConfig();
 		decoder = config.jwtDecoder(properties, userRepository);
 		tokenService = new TokenService(config.jwtEncoder(properties));

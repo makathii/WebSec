@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, firstValueFrom, map, shareReplay, tap, throwError } from 'rxjs';
 import { API_URL } from '../config';
-import { CaptchaChallenge, CaptchaSolution, Session, User } from '../models';
+import { CaptchaConfig, Session, User } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -22,14 +22,14 @@ export class AuthService {
     return this.http.post<User>(`${API_URL}/api/users`, { email, username, password });
   }
 
-  login(login: string, password: string, captcha?: CaptchaSolution) {
+  login(login: string, password: string, captcha?: string) {
     return this.http
       .post<Session>(`${API_URL}/api/session`, { login, password, captcha }, { withCredentials: true })
       .pipe(tap((session) => this.setSession(session)));
   }
 
-  captchaChallenge() {
-    return this.http.get<CaptchaChallenge>(`${API_URL}/api/session/challenge`);
+  captchaConfig() {
+    return this.http.get<CaptchaConfig>(`${API_URL}/api/session/captcha`);
   }
 
   logout() {

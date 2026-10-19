@@ -25,9 +25,8 @@ public final class Patterns {
 
 	public static final String REFRESH_TOKEN = "^[A-Za-z0-9_-]{43}$";
 
-	public static final String SHA256_HEX = "^[0-9a-f]{64}$";
-
-	public static final String CAPTCHA_SALT = "^[0-9a-f]{24}\\.[0-9]{10}$";
+	// Turnstile tokens are at most 2048 printable ASCII characters
+	public static final String CAPTCHA_TOKEN = "^[\\x21-\\x7E]{1,2048}$";
 
 	private Patterns() {
 	}

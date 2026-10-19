@@ -33,7 +33,7 @@ class ImageStorageServiceTest {
 	void setUp() throws IOException {
 		String key = Base64.getEncoder().encodeToString(new byte[32]);
 		storage = new ImageStorageService(
-				new AppProperties(key, key, "http://localhost:5173", true, uploadDir.toString()));
+				new AppProperties(key, key, "http://localhost:5173", true, uploadDir.toString(), "site", "secret"));
 	}
 
 	@Test

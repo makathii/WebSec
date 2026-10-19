@@ -48,9 +48,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
 		if (path.equals("/api/users/me/password") || path.equals("/api/users/me")) {
 			return method.equals("GET") || rateLimitService.tryAcquire("account:" + userKey(ip), 5, MINUTE);
 		}
-		if (path.equals("/api/session/challenge")) {
-			return rateLimitService.tryAcquire("challenge:" + ip, 10, MINUTE);
-		}
 		if (!method.equals("POST")) {
 			return true;
 		}

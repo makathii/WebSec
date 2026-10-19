@@ -1,7 +1,7 @@
 package com.websec.websec.controller;
 
 import com.websec.websec.config.AppProperties;
-import com.websec.websec.dto.CaptchaChallenge;
+import com.websec.websec.dto.CaptchaConfig;
 import com.websec.websec.dto.LoginRequest;
 import com.websec.websec.dto.SessionResponse;
 import com.websec.websec.dto.UserResponse;
@@ -51,9 +51,9 @@ public class SessionController {
 		return created(sessionService.login(request, http.getRemoteAddr()));
 	}
 
-	@GetMapping("/challenge")
-	public CaptchaChallenge challenge() {
-		return captchaService.createChallenge();
+	@GetMapping("/captcha")
+	public CaptchaConfig captcha() {
+		return new CaptchaConfig(captchaService.siteKey());
 	}
 
 	@PostMapping("/tokens")

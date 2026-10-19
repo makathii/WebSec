@@ -1,94 +1,95 @@
 package com.websec.websec.service;
 
-import com.websec.websec.dto.CaptchaChallenge;
-import com.websec.websec.dto.CaptchaSolution;
-import com.websec.websec.validation.Patterns;
-import org.springframework.scheduling.annotation.Scheduled;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.websec.websec.config.AppProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
+import java.net.http.HttpClient;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.HexFormat;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
+// Cloudflare Turnstile: the widget in the browser hands out a token, the token is checked here with
+// Cloudflare's siteverify API. Tokens are single use and expire after 5 minutes, Cloudflare enforces both.
 @Service
 public class CaptchaService {
 
-	public static final int MAX_NUMBER = 150_000;
+	public static final String TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
 
-	private static final Duration TTL = Duration.ofMinutes(5);
+	static final String SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
-	private final SecureRandom random = new SecureRandom();
+	private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
-	private final SecretKeySpec key;
+	private static final Logger log = LoggerFactory.getLogger(CaptchaService.class);
 
-	private final Map<String, Long> used = new ConcurrentHashMap<>();
-
-	public CaptchaService() {
-		byte[] bytes = new byte[32];
-		random.nextBytes(bytes);
-		this.key = new SecretKeySpec(bytes, "HmacSHA256");
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	record SiteverifyResponse(boolean success, @JsonProperty("error-codes") List<String> errorCodes) {
 	}
 
-	public CaptchaChallenge createChallenge() {
-		byte[] saltBytes = new byte[12];
-		random.nextBytes(saltBytes);
-		String salt = HexFormat.of().formatHex(saltBytes) + "." + Instant.now().plus(TTL).getEpochSecond();
-		String challenge = sha256(salt + random.nextInt(MAX_NUMBER + 1));
-		return new CaptchaChallenge(challenge, MAX_NUMBER, salt, hmac(challenge));
+	private final AppProperties properties;
+
+	private final RestClient restClient;
+
+	@Autowired
+	public CaptchaService(AppProperties properties) {
+		this(properties, RestClient.builder()
+			.requestFactory(requestFactory())
+			.build());
 	}
 
-	public boolean verify(CaptchaSolution solution) {
-		if (solution == null || solution.challenge() == null || solution.signature() == null
-				|| solution.salt() == null || !solution.salt().matches(Patterns.CAPTCHA_SALT)) {
+	CaptchaService(AppProperties properties, RestClient restClient) {
+		this.properties = properties;
+		this.restClient = restClient;
+		if (properties.turnstileSecretKey().equals(TEST_SECRET_KEY)) {
+			log.warn("Turnstile test secret key in use, every captcha passes. Set TURNSTILE_SECRET_KEY for real checks.");
+		}
+	}
+
+	public String siteKey() {
+		return properties.turnstileSiteKey();
+	}
+
+	// fails closed: if Cloudflare can't be reached the captcha counts as not solved
+	public boolean verify(String token, String ip) {
+		if (token == null || token.isEmpty()) {
 			return false;
 		}
-		long expires = Long.parseLong(solution.salt().substring(solution.salt().indexOf('.') + 1));
-		if (Instant.now().getEpochSecond() > expires) {
-			return false;
-		}
-		if (!equal(hmac(solution.challenge()), solution.signature())
-				|| !equal(sha256(solution.salt() + solution.number()), solution.challenge())) {
-			return false;
-		}
-		return used.putIfAbsent(solution.challenge(), expires) == null;
-	}
-
-	@Scheduled(fixedRate = 5 * 60 * 1000)
-	public void removeExpired() {
-		long now = Instant.now().getEpochSecond();
-		used.values().removeIf(expires -> expires < now);
-	}
-
-	private String hmac(String value) {
+		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+		form.add("secret", properties.turnstileSecretKey());
+		form.add("response", token);
+		form.add("remoteip", ip);
 		try {
-			Mac mac = Mac.getInstance("HmacSHA256");
-			mac.init(key);
-			return HexFormat.of().formatHex(mac.doFinal(value.getBytes(StandardCharsets.UTF_8)));
+			SiteverifyResponse response = restClient.post()
+				.uri(SITEVERIFY_URL)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(form)
+				.retrieve()
+				.body(SiteverifyResponse.class);
+			if (response == null || !response.success()) {
+				log.info("Captcha rejected by Turnstile: {}", response == null ? "empty response" : response.errorCodes());
+				return false;
+			}
+			return true;
 		}
-		catch (GeneralSecurityException e) {
-			throw new IllegalStateException(e);
+		catch (RestClientException e) {
+			log.error("Turnstile siteverify failed: {}", e.getMessage());
+			return false;
 		}
 	}
 
-	private static String sha256(String value) {
-		try {
-			return HexFormat.of()
-				.formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
-		}
-		catch (GeneralSecurityException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	private static boolean equal(String a, String b) {
-		return MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
+	private static JdkClientHttpRequestFactory requestFactory() {
+		HttpClient client = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
+		JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
+		factory.setReadTimeout(TIMEOUT);
+		return factory;
 	}
 }

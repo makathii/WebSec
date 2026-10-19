@@ -17,11 +17,14 @@
         </button>
       </div>
     </label>
+    @if (captchaSiteKey(); as siteKey) {
+      <app-turnstile [siteKey]="siteKey" action="login" (token)="onCaptchaToken($event)" (failed)="onCaptchaFailed()" />
+    }
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
-    <button type="submit" class="button" [disabled]="form.invalid || sending()">
-      {{ checking() ? 'Checking that you are not a bot...' : sending() ? 'Logging in...' : 'Log in' }}
+    <button type="submit" class="button" [disabled]="form.invalid || !canSubmit()">
+      {{ sending() ? 'Logging in...' : 'Log in' }}
     </button>
     <p class="muted">No account yet? <a routerLink="/signup">Sign up</a></p>
   </form>

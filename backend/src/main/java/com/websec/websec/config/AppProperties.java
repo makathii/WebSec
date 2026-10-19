@@ -10,11 +10,17 @@ public record AppProperties(
 		String passwordPepper,
 		String corsOrigin,
 		boolean cookieSecure,
-		String uploadDir) {
+		String uploadDir,
+		String turnstileSiteKey,
+		String turnstileSecretKey) {
 
 	public AppProperties {
 		requireKey("app.jwt-secret", jwtSecret);
 		requireKey("app.password-pepper", passwordPepper);
+		if (turnstileSiteKey == null || turnstileSiteKey.isBlank() || turnstileSecretKey == null
+				|| turnstileSecretKey.isBlank()) {
+			throw new IllegalStateException("app.turnstile-site-key and app.turnstile-secret-key must be set");
+		}
 	}
 
 	public byte[] jwtKey() {

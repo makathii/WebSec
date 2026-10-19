@@ -67,7 +67,7 @@ public class SessionService {
 			log.warn("Login blocked after too many failed attempts: user id {}, IP {}", userId, ip);
 			throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many failed logins, try again later");
 		}
-		if (rateLimitService.captchaRequired(failKey, ip) && !captchaService.verify(request.captcha())) {
+		if (rateLimitService.captchaRequired(failKey, ip) && !captchaService.verify(request.captcha(), ip)) {
 			log.warn("Login without valid captcha: user id {}, IP {}", userId, ip);
 			throw new ApiException(HttpStatus.PRECONDITION_REQUIRED, "Captcha required");
 		}
