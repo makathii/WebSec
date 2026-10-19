@@ -22,7 +22,7 @@ export function passwordRules(password: string, username = '', email = ''): Pass
     (localPart.length >= 3 && lower.includes(localPart));
 
   return [
-    { text: '12 to 128 characters', ok: length >= 12 && length <= 128 },
+    { text: '15 to 128 characters', ok: length >= 15 && length <= 128 },
     { text: 'Does not contain your username or email', ok: !containsName },
     { text: 'No control characters', ok: /^[^\p{Cc}\p{Cn}\p{Cs}]*$/u.test(password) },
   ];

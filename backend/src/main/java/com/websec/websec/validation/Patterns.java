@@ -11,7 +11,7 @@ public final class Patterns {
 	public static final String LOGIN = "(" + USERNAME + ")|(" + EMAIL + ")";
 
 	// any characters except control characters, the other rules are in PasswordPolicy
-	public static final String PASSWORD = "^[^\\p{Cc}\\p{Cn}\\p{Cs}]{12,128}$";
+	public static final String PASSWORD = "^[^\\p{Cc}\\p{Cn}\\p{Cs}]{15,128}$";
 
 	// for logging in we only check the charset and length, the policy applies when a password is set
 	public static final String ANY_PASSWORD = "^[^\\p{Cc}\\p{Cn}\\p{Cs}]{1,128}$";

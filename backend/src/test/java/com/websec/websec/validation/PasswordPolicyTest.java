@@ -29,8 +29,32 @@ class PasswordPolicyTest {
 	}
 
 	@Test
+	void repeatedPatternsAreRefused() {
+		for (String password : new String[] { "aaaaaaaaaaaaaaa", "abcabcabcabcabc", "passwordpassword", "aabbaabbaabbaabb" }) {
+			assertThat(policy.check(password, "alice", "alice@example.com")).as(password).isNotNull();
+		}
+	}
+
+	@Test
+	void sequencesAreRefused() {
+		for (String password : new String[] { "123456789012345", "1234abcd5678efgh", "qwertzuiopasdfg", "zyxwvutsrqponml" }) {
+			assertThat(policy.check(password, "alice", "alice@example.com")).as(password).isNotNull();
+		}
+	}
+
+	@Test
+	void siteNameIsRefused() {
+		assertThat(policy.check("my-websecgram-pass-77", "alice", "alice@example.com")).isNotNull();
+	}
+
+	@Test
 	void commonPasswordIsStillRefused() {
-		assertThat(policy.check("Password123!", "alice", "alice@example.com")).isEqualTo("This password is too common");
+		assertThat(policy.check("Password1234567!", "alice", "alice@example.com")).isEqualTo("This password is too common");
+	}
+
+	@Test
+	void fourteenCharactersAreTooShort() {
+		assertThat(policy.check("Meine-Katze-14", "alice", "alice@example.com")).isNotNull();
 	}
 
 	@Test
