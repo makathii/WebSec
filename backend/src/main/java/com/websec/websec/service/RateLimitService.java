@@ -41,8 +41,11 @@ public class RateLimitService {
 		tryAcquire(accountKey(account), Integer.MAX_VALUE, FAILED_LOGIN_WINDOW);
 	}
 
+	// a successful login proves the password, so the account counter is cleared too,
+	// otherwise the captcha would still be asked for after logging in and out again
 	public void resetFailedLogins(String account, String ip) {
 		reset(pairKey(account, ip));
+		reset(accountKey(account));
 	}
 
 	private static String pairKey(String account, String ip) {
